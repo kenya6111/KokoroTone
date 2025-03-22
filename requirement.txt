@@ -1,0 +1,9 @@
+fastapi==0.100.0
+uvicorn==0.23.0
+funasr>=1.0.0
+pydub==0.25.1
+# PyTorch: バージョンはMPSサポートを考慮して適宜
+torch==2.1.0
+torchaudio==2.1.0
+modelscope>=1.8.0
+# など

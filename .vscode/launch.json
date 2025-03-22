@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI (Uvicorn) Debug",
+      "type": "python",           // Pythonデバッガ
+      "request": "launch",
+      // "module" を指定して uvicorn を呼び出す
+      "module": "uvicorn",
+      "args": [
+        // Python モジュール:app の形式で指定する
+        // もしファイル名が app.py で、中に app = FastAPI() があるなら:
+        "app:app",
+        "--host", "127.0.0.1",
+        "--port", "8005",
+        "--reload"
+      ],
+      "justMyCode": true
+    }
+  ]
+}

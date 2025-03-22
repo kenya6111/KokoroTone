@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>KokoroTone</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 例: Noto Sans JP と Quicksandを読み込み -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* 全体で Quicksand, Noto Sans JP を優先使用 */
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      /* パステルグラデーション背景 */
+      background: linear-gradient(135deg, #ffdce5 0%, #fff8d9 50%, #d9f9ff 100%);
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      /* フォントを指定 */
+      font-family: 'Quicksand', 'Noto Sans JP', sans-serif;
+      /* 文字色も少しダークグレー系に */
+      color: #444;
+    }
+
+    /* タイトル */
+    h1 {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-size: 2rem;  /* 見出しをやや大きく */
+      letter-spacing: 0.05em;
+    }
+
+    /* コンテナ */
+    .container {
+      width: 90%;
+      max-width: 600px;
+      margin: 1rem auto;
+      text-align: center;
+      line-height: 1.6; /* 行間を少し広めに */
+    }
+
+    .container p {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    /* ボタン系 */
+    .btn {
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.8rem 1.2rem;
+      cursor: pointer;
+      margin: 0.5rem;
+      outline: none;
+      font-size: 1rem;
+      transition: opacity 0.2s;
+      font-weight: 600; /* Quicksandで少し強めのウエイト */
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .record-btn {
+      background-color: #ff3366;
+    }
+    .stop-btn {
+      background-color: #3333cc;
+    }
+    .upload-btn {
+      background-color: #28a745;
+    }
+    #fileInput {
+      margin-right: 0.5rem;
+    }
+
+    /* メイン感情パネル */
+    .main-emotion-card {
+      width: 90%;
+      max-width: 450px;
+      background: #fef4ea;
+      border-radius: 8px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+      text-align: center;
+      padding: 1.2rem;
+      margin: 2rem auto;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .main-emotion-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 2px 4px 14px rgba(0,0,0,0.2);
+    }
+    .emotion-icon {
+      font-size: 2.7rem;  /* やや大きめ */
+      margin-bottom: 0.5rem;
+    }
+    .emotion-title {
+      font-weight: 700;
+      font-size: 1.6rem;
+      margin-bottom: 0.3rem;
+    }
+    .emotion-score {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    /* ドーナツグラフ */
+    #chartContainer {
+      width: 90%;
+      max-width: 500px;
+      margin: 1rem auto;
+    }
+
+    /* 全感情テキスト */
+    #resultDisplay {
+      margin: 1rem auto;
+      font-weight: bold;
+      font-size: 1rem;
+      text-align: center;
+      max-width: 80%;
+      word-wrap: break-word;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    /* ローディングオーバーレイ */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      display: none;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 6px solid #ccc;
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      margin-top: 0.8rem;
+      font-size: 1.2rem;
+      color: #555;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <h1>KokoroTone</h1>
+
+  <div class="container">
+    <p>録音ボタンを押して音声を収録し、サーバで感情推定 → 結果を表示します！</p>
+    <div>
+      <button class="btn record-btn" id="recordBtn">録音開始</button>
+      <button class="btn stop-btn" id="stopBtn" disabled>録音停止</button>
+    </div>
+    <hr>
+    <h2>または、音声ファイルをアップロード</h2>
+    <input type="file" id="fileInput" accept="audio/*">
+    <button class="btn upload-btn" id="uploadBtn">ファイルを解析</button>
+  </div>
+
+  <!-- メイン感情パネル -->
+  <div class="main-emotion-card" id="mainEmotionCard">
+    <div class="emotion-icon" id="emotionIcon">❓</div>
+    <div class="emotion-title" id="emotionName">メイン感情</div>
+    <div class="emotion-score" id="emotionScore">スコア: ???</div>
+  </div>
+
+  <!-- 全感情テキスト表示 -->
+  <div id="resultDisplay"></div>
+
+  <!-- ドーナツグラフ -->
+  <div id="chartContainer">
+    <canvas id="emotionChart" width="400" height="400"></canvas>
+  </div>
+
+  <!-- ローディングオーバーレイ -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">解析中...</div>
+  </div>
+
+  <!-- Chart.js（CDN） -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- confetti紙吹雪ライブラリ (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- メインスクリプト -->
+  <script src="/static/script.js"></script>
+</body>
+</html>
